@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Audit Map"
+  short_description: "Read-only code audit with an interactive HTML map"
+  default_prompt: "Use $code-audit-map to audit this repository without changing its source and create an interactive HTML architecture map, evidence-backed findings, and a phased remediation roadmap for non-technical readers."

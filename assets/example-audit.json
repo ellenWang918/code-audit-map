@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "meta": {
+    "project": "Northstar Orders",
+    "audited_at": "2026-10-14T10:00:00+10:00",
+    "revision": "fictional-example",
+    "worktree": "Fictional demonstration; no repository was inspected",
+    "scope": "Example of an ordering platform; all evidence is invented",
+    "status": "partial",
+    "is_demo": true
+  },
+  "summary": {
+    "verdict": "An example ordering platform with clear functional boundaries, one confirmed high-priority access-control problem, and a payment-retry risk that needs validation.",
+    "executive": [
+      "In this fictional example, customers place orders through a portal. An order service coordinates storage and payment, while a background worker records payment updates.",
+      "The order lookup checks that someone is signed in but does not constrain the lookup to their account. A customer who knows another order identifier can retrieve it.",
+      "Payment creation may be retried without a stable request key. Whether this causes duplicate charges depends on the provider configuration and caller behavior.",
+      "Background payment failures are acknowledged without a retry or useful diagnostic record, leaving affected orders unresolved.",
+      "Fix the access check first, validate payment retry behavior next, then improve failure handling and release checks. A system rewrite is not justified by these findings."
+    ],
+    "architecture": [
+      "The customer portal is the front door. Identity checks establish who is signed in; order management decides what to save and when to request a payment. The order database keeps the business record, and the payment provider moves money outside the application.",
+      "Payment updates return through a background worker. This creates a reliability boundary: the platform must safely handle repeated messages and make failed processing visible. The map separates business capabilities from folders so a product owner can follow that flow.",
+      "The hosting platform serves the portal. Its production wiring is inferred from configuration, because a repository alone cannot establish the live deployment. Dashed arrows show that uncertainty."
+    ],
+    "priorities": ["F001", "F002", "F003"],
+    "strengths": [
+      {
+        "description": "The example centralizes payment-provider access behind one adapter. Keep that boundary: it gives retry and validation changes a focused home.",
+        "evidence": [{"path": "src/payments/provider.ts", "line": 8, "end_line": 30, "note": "Illustrative adapter boundary; this file is fictional."}]
+      }
+    ],
+    "assumptions": [
+      "Effort assumes one engineer familiar with this fictional platform, including focused tests and review.",
+      "Customer accounts are intended to be isolated. Production configuration has not been inspected."
+    ],
+    "questions": [
+      "Does the payment provider enforce idempotency through configuration or a layer absent from this example?",
+      "What release capacity and operational ownership are available for the background worker?"
+    ]
+  },
+  "layers": [
+    {"id": "experience", "label": "Customer experience"},
+    {"id": "operations", "label": "Business operations"},
+    {"id": "records", "label": "Business records"},
+    {"id": "external", "label": "External platforms"}
+  ],
+  "modules": [
+    {"id": "portal", "label": "Customer portal", "layer": "experience", "type": "User interface", "purpose": "Lets customers place and track orders.", "business_role": "The customer-facing part of the product. It collects order details and displays order status.", "review_status": "reviewed", "paths": ["src/portal/"], "evidence": [{"path": "src/portal/checkout.tsx", "line": 18, "end_line": 62, "note": "Fictional checkout screen submits an order and shows its status."}]},
+    {"id": "identity", "label": "Identity checks", "layer": "operations", "type": "Access service", "purpose": "Establishes who is signed in.", "business_role": "Provides the account identity used to protect customer-specific operations.", "review_status": "reviewed", "paths": ["src/auth/"], "evidence": [{"path": "src/auth/session.ts", "line": 12, "end_line": 39, "note": "Fictional session code extracts an authenticated account."}]},
+    {"id": "orders", "label": "Order management", "layer": "operations", "type": "Business service", "purpose": "Creates orders and coordinates payment.", "business_role": "Turns a customer's request into a durable business record, then initiates payment.", "review_status": "reviewed", "paths": ["src/orders/"], "evidence": [{"path": "src/orders/routes.ts", "line": 20, "end_line": 89, "note": "Fictional routes handle order creation and retrieval."}]},
+    {"id": "worker", "label": "Payment updates", "layer": "operations", "type": "Background worker", "purpose": "Applies payment events to order status.", "business_role": "Keeps customer-visible order status aligned with the payment provider after asynchronous processing.", "review_status": "sampled", "paths": ["src/workers/"], "evidence": [{"path": "src/workers/payment-events.ts", "line": 24, "end_line": 68, "note": "Fictional sampled worker handles payment callbacks."}]},
+    {"id": "database", "label": "Order database", "layer": "records", "type": "Data store", "purpose": "Stores orders, accounts, and payment status.", "business_role": "The durable record needed for order tracking and support. Its query boundaries affect account isolation.", "review_status": "reviewed", "paths": ["db/schema.sql", "src/data/"], "evidence": [{"path": "db/schema.sql", "line": 4, "end_line": 44, "note": "Fictional schema defines account ownership and order state."}]},
+    {"id": "payments", "label": "Payment provider", "layer": "external", "type": "External service", "purpose": "Processes customer payments.", "business_role": "Moves money outside the application and sends payment events back. Live provider settings remain unknown.", "review_status": "sampled", "paths": ["src/payments/provider.ts", "External payment platform"], "evidence": [{"path": "src/payments/provider.ts", "line": 8, "end_line": 48, "note": "Fictional local integration is visible; external provider settings are not."}]},
+    {"id": "hosting", "label": "Hosting & releases", "layer": "external", "type": "Deployment platform", "purpose": "Builds and serves the customer portal.", "business_role": "Controls how changes reach customers. Runtime deployment topology is inferred from repository configuration.", "review_status": "sampled", "paths": [".github/workflows/release.yml", "deployment.json"], "evidence": [{"path": ".github/workflows/release.yml", "line": 9, "end_line": 35, "note": "Fictional workflow defines the build and release job."}]}
+  ],
+  "relationships": [
+    {"id": "portal-auth", "source": "portal", "target": "identity", "label": "Checks the signed-in account", "kind": "request", "confidence": "confirmed", "evidence": [{"path": "src/portal/session.ts", "line": 10, "end_line": 20, "note": "Fictional portal requests session identity."}]},
+    {"id": "portal-orders", "source": "portal", "target": "orders", "label": "Submits and retrieves orders", "kind": "request", "confidence": "confirmed", "evidence": [{"path": "src/portal/checkout.tsx", "line": 40, "end_line": 55, "note": "Fictional checkout calls the orders endpoint."}]},
+    {"id": "orders-auth", "source": "orders", "target": "identity", "label": "Requires a signed-in session", "kind": "dependency", "confidence": "confirmed", "evidence": [{"path": "src/orders/routes.ts", "line": 22, "end_line": 26, "note": "Fictional order routes use the shared authentication guard."}]},
+    {"id": "orders-db", "source": "orders", "target": "database", "label": "Reads and writes business records", "kind": "data", "confidence": "confirmed", "evidence": [{"path": "src/orders/repository.ts", "line": 12, "end_line": 60, "note": "Fictional repository performs order queries."}]},
+    {"id": "orders-payments", "source": "orders", "target": "payments", "label": "Requests a payment", "kind": "request", "confidence": "confirmed", "evidence": [{"path": "src/payments/provider.ts", "line": 31, "end_line": 48, "note": "Fictional adapter creates the provider payment."}]},
+    {"id": "payments-worker", "source": "payments", "target": "worker", "label": "Sends payment-result events", "kind": "event", "confidence": "confirmed", "evidence": [{"path": "src/workers/payment-events.ts", "line": 24, "end_line": 35, "note": "Fictional event handler registers the payment callback."}]},
+    {"id": "worker-db", "source": "worker", "target": "database", "label": "Updates the saved payment status", "kind": "data", "confidence": "confirmed", "evidence": [{"path": "src/workers/payment-events.ts", "line": 40, "end_line": 56, "note": "Fictional handler persists the result."}]},
+    {"id": "hosting-portal", "source": "hosting", "target": "portal", "label": "Builds and serves the portal", "kind": "deployment", "confidence": "inferred", "evidence": [{"path": "deployment.json", "line": 2, "end_line": 14, "note": "Fictional deployment target is declared; live wiring was not verified."}]}
+  ],
+  "journeys": [
+    {"id": "place-order", "title": "A customer pays for an order", "description": "Follow the example payment path from the customer screen to the final saved status. It crosses an external-service boundary and returns through a background worker.", "steps": [
+      {"module": "portal", "text": "The customer enters their order and chooses to pay."},
+      {"module": "orders", "text": "The service creates an order and starts a payment request."},
+      {"module": "payments", "text": "The external platform processes the payment."},
+      {"module": "worker", "text": "A later event tells the application the payment result."},
+      {"module": "database", "text": "The worker saves the updated order status."}
+    ], "relationship_ids": ["portal-orders", "orders-payments", "payments-worker", "worker-db"]},
+    {"id": "track-order", "title": "A customer checks an order", "description": "The order lookup should constrain access to the signed-in customer's account. The example finding F001 identifies a missing constraint.", "steps": [
+      {"module": "portal", "text": "The customer opens an order's status screen."},
+      {"module": "orders", "text": "The route requests the saved order."},
+      {"module": "database", "text": "The database returns the matching record."}
+    ], "relationship_ids": ["portal-orders", "orders-db"]}
+  ],
+  "findings": [
+    {"id": "F001", "title": "Customers can retrieve another account’s order", "severity": "P1", "confidence": "confirmed", "category": "Security", "severity_reason": "An authenticated customer can cross an account boundary using a known order identifier; the example route has no ownership check.", "modules": ["orders", "database"], "description": "In the fictional route, authentication is required, but retrieval uses only the order identifier. The repository query and response path contain no account constraint.", "evidence": [
+      {"path": "src/orders/routes.ts", "line": 41, "end_line": 52, "note": "Fictional handler returns the lookup result after checking only that a session exists."},
+      {"path": "src/orders/repository.ts", "line": 18, "end_line": 25, "note": "Fictional query selects by order ID without account ownership."}
+    ], "technical_impact": "The missing account predicate permits cross-account read access. This establishes an unsafe code path, not evidence that a real incident occurred.", "business_impact": "Customer order information can be disclosed to another account, undermining customer trust and increasing support and incident-response work.", "recommendation": "Constrain the query to both order ID and authenticated account ID. Return the normal not-found response for inaccessible orders and add cross-account regression tests.", "effort": {"range": "1–2 engineer-days", "assumptions": "Includes route and repository tests; assumes no exceptional shared-order policy or data migration."}, "verification": "Account A can read its own order; account B receives no order data for the same ID. Test both direct route access and repository behavior."},
+    {"id": "F002", "title": "Retried payment requests may create duplicate charges", "severity": "P1", "confidence": "potential", "category": "Reliability / dependencies", "severity_reason": "Duplicate payments would materially affect a core business flow, but provider-level protection and actual retry behavior have not been established.", "modules": ["orders", "payments"], "description": "The fictional adapter sends payment creation without a stable idempotency key. A caller retry after a timeout could create another payment if the provider does not deduplicate it.", "evidence": [{"path": "src/payments/provider.ts", "line": 31, "end_line": 48, "note": "Fictional request payload includes no stable request key; provider settings are outside the inspected scope."}], "technical_impact": "A timeout can leave the original request outcome unknown. Repeating it may create a second provider-side operation.", "business_impact": "If the risk is reachable, customers may need refunds and support may need to reconcile duplicate payments.", "recommendation": "First validate provider deduplication and caller retries. If protection is absent, derive a stable payment-attempt key and persist the provider result for safe retry.", "effort": {"range": "2–4 engineer-days", "assumptions": "Includes validation and adapter regression tests; provider sandbox access is available; excludes refunds or historical data cleanup."}, "verification": "Confirm provider settings, then replay the same logical payment after an induced timeout in an isolated test. Verify that at most one payment is created."},
+    {"id": "F003", "title": "Failed payment updates disappear without recovery", "severity": "P2", "confidence": "confirmed", "category": "Maintainability / reliability", "severity_reason": "A bounded worker failure loses a payment update and creates manual recovery work; broad outage or financial loss is not established.", "modules": ["worker", "database"], "description": "The fictional payment worker catches a database exception, emits no useful diagnostic event, and acknowledges the message as successfully handled.", "evidence": [{"path": "src/workers/payment-events.ts", "line": 57, "end_line": 68, "note": "Fictional catch block suppresses the error and completes the callback without retry."}], "technical_impact": "A transient storage error can permanently leave order status stale because the event is acknowledged before the update succeeds.", "business_impact": "Customers can see an incorrect order status and support staff must investigate and repair affected orders manually.", "recommendation": "Acknowledge only after a successful update. Use bounded retries and a recoverable failure queue, with a correlation ID and redacted diagnostic logging.", "effort": {"range": "1–3 engineer-days", "assumptions": "Includes failure-path tests and operational instructions; assumes retry support in the existing event infrastructure."}, "verification": "Inject a transient database failure. Verify bounded retry, successful eventual update, and a visible recoverable state when retries are exhausted."},
+    {"id": "F004", "title": "Releases can bypass the existing test suite", "severity": "P2", "confidence": "confirmed", "category": "Deployment / testing", "severity_reason": "The example release job lacks a test gate. This permits regressions to reach release, though no deployed regression is claimed.", "modules": ["hosting", "portal"], "description": "The fictional release workflow builds and publishes directly. The repository already defines a test command, but the release job does not invoke it or depend on a successful test job.", "evidence": [
+      {"path": ".github/workflows/release.yml", "line": 9, "end_line": 35, "note": "Fictional release steps build and deploy without a test dependency."},
+      {"path": "package.json", "line": 6, "end_line": 13, "note": "Fictional manifest defines an existing test command."}
+    ], "technical_impact": "A buildable change can be published even if its behavioral tests fail. Static workflow inspection does not establish branch protection in the live platform.", "business_impact": "Avoidable regressions can interrupt customer ordering and increase rollback and support effort.", "recommendation": "Gate the release job on the existing behavioral test command. Add the cross-account and payment failure cases from the earlier phases; validate branch protection separately.", "effort": {"range": "0.5–1 engineer-day", "assumptions": "Existing tests run in CI without production credentials; excludes broad test-suite repair."}, "verification": "In an isolated CI trial, a deliberately failing behavioral test prevents release; a passing run can proceed."}
+  ],
+  "roadmap": [
+    {"id": "contain", "title": "Protect customer boundaries", "timing": "Before the next release", "goal": "Close the demonstrated cross-account read path with a narrow correction and a behavioral regression test.", "finding_ids": ["F001"], "dependencies": [], "success_criteria": ["Cross-account order reads return no customer data.", "Own-account reads continue to work and are covered by tests."]},
+    {"id": "stabilize", "title": "Make payments recoverable", "timing": "Next engineering cycle", "goal": "Validate the duplicate-payment risk and ensure failed updates remain visible and safely recoverable.", "finding_ids": ["F002", "F003"], "dependencies": ["contain"], "success_criteria": ["Payment retry behavior is demonstrated in an isolated environment.", "Repeated logical requests produce at most one payment, if remediation is required.", "Transient worker failures retry and exhausted failures remain recoverable."]},
+    {"id": "guard", "title": "Keep fixes in place", "timing": "Following stabilization", "goal": "Make the existing behavioral tests part of the release gate, using the earlier fixes as focused regression coverage.", "finding_ids": ["F004"], "dependencies": ["stabilize"], "success_criteria": ["A failing behavioral test blocks release.", "Release ownership and rollback instructions are clear."]}
+  ],
+  "coverage": {
+    "inventory_count": 14,
+    "files": [
+      {"path": "README.md", "status": "reviewed", "reason": "Fictional product and setup documentation."},
+      {"path": "package.json", "status": "reviewed", "reason": "Fictional manifest and command definitions."},
+      {"path": "package-lock.json", "status": "sampled", "reason": "Example direct-dependency inspection; transitive packages were not fully assessed."},
+      {"path": "src/portal/checkout.tsx", "status": "reviewed", "reason": "Example complete customer ordering path."},
+      {"path": "src/portal/session.ts", "status": "reviewed", "reason": "Example portal identity integration."},
+      {"path": "src/auth/session.ts", "status": "reviewed", "reason": "Example identity extraction and session validation."},
+      {"path": "src/orders/routes.ts", "status": "reviewed", "reason": "Example create and retrieve handlers."},
+      {"path": "src/orders/repository.ts", "status": "reviewed", "reason": "Example persistence and ownership queries."},
+      {"path": "src/payments/provider.ts", "status": "reviewed", "reason": "Example local provider adapter; live settings unavailable."},
+      {"path": "src/workers/payment-events.ts", "status": "sampled", "reason": "Only registration and failure handling are represented in the fictional review."},
+      {"path": "src/workers/reconciliation.ts", "status": "unreviewed", "reason": "Illustrates a remaining first-party coverage gap."},
+      {"path": "db/schema.sql", "status": "reviewed", "reason": "Example account and order relationships."},
+      {"path": ".github/workflows/release.yml", "status": "reviewed", "reason": "Example build and release ordering."},
+      {"path": "deployment.json", "status": "reviewed", "reason": "Example hosting configuration, without live verification."}
+    ],
+    "exclusions": [
+      {"path": ".git", "reason": "Repository internal objects; commit/status metadata would be inspected separately in a real audit."},
+      {"path": "node_modules", "reason": "Vendored/generated dependencies; manifests and lockfile define dependency review."},
+      {"path": ".env.local", "reason": "Sensitive local values; secret contents would never be copied into an audit report."}
+    ],
+    "dimensions": [
+      {"name": "Architecture", "status": "partial", "summary": "Example primary order and payment flows mapped; reconciliation remains unreviewed."},
+      {"name": "Project structure", "status": "reviewed", "summary": "Example first-party folders, entry points, and configuration ownership assessed."},
+      {"name": "Dependencies", "status": "partial", "summary": "Local adapter and direct dependencies considered; no current vulnerability scan is represented."},
+      {"name": "Separation of concerns", "status": "reviewed", "summary": "Example interface, order, storage, and provider boundaries are identifiable; no broad refactor justified."},
+      {"name": "Security", "status": "partial", "summary": "Cross-account lookup defect illustrated; this is not a complete security assessment."},
+      {"name": "Performance", "status": "not-assessed", "summary": "No realistic workload, measurements, or hot-path review is represented."},
+      {"name": "Testing", "status": "partial", "summary": "Existing test command found; suite behavior and full critical-path coverage remain unknown."},
+      {"name": "Maintainability", "status": "partial", "summary": "Example worker failure handling inspected; remaining worker code is unreviewed."},
+      {"name": "Deployment", "status": "partial", "summary": "Workflow and hosting configuration inspected; live branch protection, rollback, and backups unverified."}
+    ],
+    "checks": [
+      {"name": "Repository test suite", "status": "not-run", "detail": "This report is a fictional demonstration. No repository commands were executed."},
+      {"name": "Dependency advisory verification", "status": "not-run", "detail": "No real package versions or vulnerability assertions are present in this example."},
+      {"name": "Live deployment checks", "status": "not-run", "detail": "No external service or production environment was contacted."}
+    ],
+    "limitations": [
+      "Every product name, source citation, finding, and estimate in this preview is fictional.",
+      "The incomplete inventory review is intentional: it demonstrates how sampled and unreviewed areas remain visible.",
+      "Static review cannot establish actual traffic, production settings, incident history, or measured performance.",
+      "The sample has no real source files behind its evidence links. A real audit must verify those paths and lines."
+    ]
+  }
+}

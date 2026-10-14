@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Code Audit Map</title>
+<style>
+:root {
+  color-scheme: light;
+  --ink: #1d1d1f;
+  --muted: #6e6e73;
+  --paper: #f5f5f7;
+  --card: #fff;
+  --line: #e5e5ea;
+  --accent: #0071e3;
+  --link: #0066cc;
+  --edge: #aeb8c4;
+  --edge-active: #0071e3;
+  --shadow: 0 4px 28px rgba(0,0,0,.035);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 92px; }
+body { margin: 0; color: var(--ink); background: var(--paper); font: 15px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",sans-serif; -webkit-font-smoothing: antialiased; }
+button,input,select { font: inherit; }
+button,select { cursor: pointer; }
+button { color: inherit; }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+a { color: var(--link); text-underline-offset: 3px; }
+h1,h2,h3,p { margin: 0; }
+h1,h2,h3 { font-family: -apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Segoe UI",sans-serif; }
+h1 { font-size: clamp(44px,5.8vw,76px); font-weight: 650; line-height: 1.05; letter-spacing: -.055em; max-width: 1000px; margin: 0 auto; text-wrap: balance; }
+h2 { font-size: clamp(28px,3vw,40px); font-weight: 650; line-height: 1.16; letter-spacing: -.035em; text-wrap: balance; }
+h3 { font-size: 20px; font-weight: 600; line-height: 1.3; letter-spacing: -.025em; }
+p+p { margin-top: 14px; }
+ul,ol { padding-left: 22px; }
+li+li { margin-top: 10px; }
+small,.small { font-size: 12px; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .035em; }
+.wrap { width: min(1240px,calc(100% - 80px)); margin: auto; }
+.topbar { position: sticky; top: 0; z-index: 10; color: var(--ink); background: rgba(251,251,253,.84); border-bottom: 1px solid #00000014; -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 28px; min-height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; white-space: nowrap; font-size: 16px; font-weight: 600; letter-spacing: -.4px; }
+.brand svg { color: var(--accent); flex-shrink: 0; }
+.nav { display: flex; align-items: center; gap: 26px; overflow: auto; }
+.nav a { color: #515154; font-size: 12px; text-decoration: none; white-space: nowrap; transition: color .18s; }
+.nav a:hover { color: var(--link); }
+.print-button { border: 0; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 500; padding: 8px 17px; white-space: nowrap; transition: background .18s; }
+.print-button:hover { background: #0077ed; }
+.demo { padding: 12px 24px; background: #eef4fc; border-bottom: 1px solid #dce8f8; color: #475c78; text-align: center; font-size: 12px; }
+.demo strong { font-weight: 650; letter-spacing: .025em; }
+.hero { padding: 76px 0 42px; text-align: center; }
+.hero .eyebrow { color: var(--link); margin-bottom: 22px; }
+.hero p { max-width: 800px; font-size: clamp(17px,1.6vw,21px); line-height: 1.5; color: var(--muted); margin: 24px auto 30px; letter-spacing: -.025em; text-wrap: pretty; }
+.meta { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 20px; font-size: 11px; color: var(--muted); }
+.meta strong { color: #515154; font-weight: 600; margin-right: 4px; }
+.stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 0; margin: 0 0 72px; padding: 32px 10px; background: var(--card); border: 1px solid #00000009; border-radius: 28px; box-shadow: var(--shadow); }
+.stat { padding: 6px 28px; border-right: 1px solid var(--line); }
+.stat:last-child { border-right: 0; }
+.stat strong { font-size: 43px; line-height: 1.05; display: block; letter-spacing: -.05em; font-weight: 600; }
+.stat span { font-size: 12px; color: #515154; display: block; margin-top: 12px; line-height: 1.5; }
+.stat .small { font-size: 11px; color: var(--muted); margin-top: 7px; }
+.section { margin-bottom: 72px; scroll-margin-top: 90px; }
+.section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+.section-heading p { color: var(--muted); margin-top: 12px; max-width: 760px; font-size: 15px; line-height: 1.6; }
+.section-number { font-size: 11px; font-weight: 600; letter-spacing: .08em; color: var(--link); margin-bottom: 12px; }
+.panel { background: var(--card); border: 1px solid #0000000a; border-radius: 26px; padding: 32px; box-shadow: var(--shadow); }
+.summary-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 22px; }
+.summary-grid ul { margin: 20px 0 0; color: #515154; font-size: 14px; }
+.summary-grid li::marker { color: #a1a1a6; }
+.priorities { display: grid; gap: 14px; margin-top: 20px; }
+.priority { display: flex; gap: 13px; align-items: flex-start; border-top: 1px solid var(--line); padding-top: 17px; }
+.priority a { color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; line-height: 1.5; }
+.priority a:hover { color: var(--link); }
+.priority .small { margin-top: 5px; }
+.badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; line-height: 1.5; padding: 4px 8px; border-radius: 7px; background: #f0f0f3; color: #515154; white-space: nowrap; font-weight: 600; letter-spacing: .005em; }
+.P0,.P1 { background: #fff0ef; color: #b42328; }
+.P2 { background: #fff5e6; color: #8d5600; }
+.P3 { background: #edf4ff; color: #285ea7; }
+.potential { background: #fff5e6; color: #8d5600; }
+.unknown { background: #f1effb; color: #6553a2; }
+.architecture-text { margin-bottom: 28px; max-width: 1040px; }
+.architecture-text p { font-size: 15px; color: #515154; }
+.map-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; justify-content: space-between; margin-bottom: 24px; }
+.map-toolbar label { font-size: 12px; color: var(--muted); }
+.map-toolbar select { margin-left: 8px; }
+select,input { border: 1px solid #d2d2d7; border-radius: 10px; background: #fff; color: var(--ink); padding: 9px 12px; max-width: 100%; min-height: 40px; }
+input::placeholder { color: #747479; }
+select:focus,input:focus { border-color: var(--accent); }
+.plain-button { border: 1px solid #d2d2d7; border-radius: 999px; background: #fff; color: #515154; padding: 8px 15px; min-height: 36px; font-size: 12px; transition: background .18s; }
+.plain-button:hover { background: #f5f5f7; }
+.legend { font-size: 11px; display: flex; flex-wrap: wrap; gap: 16px; color: var(--muted); margin-top: 16px; }
+.legend i { display: inline-block; width: 22px; border-top: 2px solid var(--edge); vertical-align: middle; margin-right: 6px; }
+.legend .dashed { border-top-style: dashed; }
+.map-scroll { overflow: auto; padding: 6px 2px 18px; }
+.map-canvas { position: relative; isolation: isolate; }
+.map-grid { position: relative; display: grid; grid-template-columns: repeat(var(--layers),minmax(205px,1fr)); gap: 54px; min-width: var(--map-width); padding: 5px 10px 20px; }
+.layer h3 { font-size: 10px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 0 0 22px; min-height: 28px; display: flex; align-items: center; }
+.module { display: block; position: relative; width: 100%; min-height: 148px; text-align: left; margin-bottom: 22px; padding: 18px; background: #fbfbfd; border: 1px solid #dedee4; border-radius: 18px; box-shadow: 0 2px 8px #00000006; transition: opacity .18s,border-color .18s,box-shadow .18s; }
+.module:hover { border-color: #a3bcd9; box-shadow: 0 4px 16px #0066cc14; }
+.module.selected { border: 2px solid var(--accent); padding: 17px; background: #f1f7ff; box-shadow: 0 0 0 3px #0071e30f; }
+.module.dimmed { opacity: .38; }
+.module .module-type { font-size: 9px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.module strong { display: block; font-size: 16px; font-weight: 600; letter-spacing: -.025em; margin: 8px 0; line-height: 1.3; }
+.module .purpose { display: block; font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 15px; }
+.module-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+.module .badge { font-size: 9px; padding: 3px 6px; border-radius: 5px; }
+.map-svg { position: absolute; inset: 0; pointer-events: none; z-index: -1; overflow: visible; }
+.map-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; border-top: 1px solid var(--line); padding-top: 26px; }
+.map-bottom h3 { font-size: 17px; margin-bottom: 12px; }
+.journey-steps { margin: 14px 0; }
+.journey-steps li::marker { color: var(--link); font-weight: 600; }
+.step-button { border: 0; background: none; padding: 0; text-align: left; color: var(--link); text-decoration: none; font-weight: 550; }
+.step-button:hover { text-decoration: underline; text-underline-offset: 3px; }
+.relationship-list { list-style: none; padding: 0; margin: 16px 0; }
+.relationship-list li { border-bottom: 1px solid var(--line); padding: 11px 0; font-size: 13px; }
+.relationship-list .badge { margin-left: 5px; }
+.evidence { padding: 12px 0; border-top: 1px solid var(--line); font-size: 12px; overflow-wrap: anywhere; }
+.evidence code { font: 11px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; color: #3a5e84; background: #f1f5fa; padding: 3px 7px; border-radius: 5px; }
+.evidence p { color: var(--muted); margin-top: 7px; font-size: 12px; }
+.evidence-list { margin-top: 12px; }
+.module-paths { font: 11px/1.7 ui-monospace,Consolas,monospace; overflow-wrap: anywhere; margin-top: 13px; color: var(--muted); }
+details { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 18px; }
+summary { cursor: pointer; font-size: 13px; font-weight: 550; }
+details>div { margin-top: 16px; }
+.filters { display: grid; grid-template-columns: minmax(180px,1fr) auto auto auto; gap: 14px; margin-bottom: 18px; align-items: end; }
+.filters label { display: grid; gap: 7px; font-size: 11px; color: var(--muted); }
+.filter-count { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.table-scroll { overflow: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; text-align: left; }
+th { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 550; padding: 14px 12px; border-bottom: 1px solid #d2d2d7; }
+td { padding: 19px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: #515154; }
+td .muted { font-size: 12px; margin-top: 7px; display: block; }
+td a { color: var(--ink); font-weight: 550; text-decoration: none; }
+td a:hover { color: var(--link); text-decoration: underline; }
+td.effort { min-width: 130px; font-size: 12px; }
+.finding-cards { display: grid; gap: 12px; margin-top: 22px; }
+.finding { margin: 0; border: 1px solid #0000000a; border-radius: 18px; padding: 20px 25px; background: var(--card); box-shadow: 0 2px 12px #00000005; scroll-margin-top: 90px; }
+.finding>summary { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; list-style: none; }
+.finding>summary::-webkit-details-marker { display: none; }
+.finding>summary::before { content: '+'; font-size: 23px; font-weight: 300; color: var(--muted); margin-right: 7px; }
+.finding[open]>summary::before { content: '−'; color: var(--link); }
+.finding-body { margin-top: 24px; }
+.finding-description { margin: 14px 0 22px; color: #515154; }
+.finding-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 32px; }
+.finding-grid h4 { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 8px; color: var(--muted); }
+.finding-grid p { font-size: 13px; color: #515154; }
+.finding-grid .full { grid-column: 1/-1; }
+.roadmap-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap: 22px; }
+.phase { position: relative; overflow: hidden; padding-top: 32px; }
+.phase::before { content: ''; display: block; height: 3px; width: 42px; background: var(--accent); border-radius: 999px; margin-bottom: 22px; }
+.phase .eyebrow { color: var(--muted); font-size: 10px; font-weight: 550; letter-spacing: .065em; }
+.phase h3 { font-size: 22px; margin: 12px 0 16px; }
+.phase p,.phase ul { font-size: 13px; color: #515154; }
+.phase .phase-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+.phase .phase-links a { font-size: 11px; font-weight: 550; text-decoration: none; background: #eef5ff; padding: 5px 10px; border-radius: 7px; }
+.phase .small { margin-top: 14px; }
+.coverage-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; }
+.dimension { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.dimension>div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+.dimension strong { font-weight: 550; }
+.dimension p { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.check { margin-top: 20px; }
+.check p { font-size: 12px; color: var(--muted); margin-top: 7px; }
+.coverage-counts { display: flex; flex-wrap: wrap; gap: 14px; margin: 18px 0; color: var(--muted); font-size: 12px; }
+.coverage-counts strong { color: var(--ink); font-weight: 600; }
+.footer { border-top: 1px solid #dcdce1; padding: 28px 0 42px; color: var(--muted); font-size: 11px; }
+.empty { padding: 20px 0; color: var(--muted); font-size: 13px; }
+.hide { display: none !important; }
+.callout { padding: 16px 18px; background: #f5f7fb; color: #626a77; border: 1px solid #e8edf5; border-radius: 13px; font-size: 12px; margin-top: 20px; }
+.check-list { margin-top: 20px; }
+.all-relationships { font-size: 12px; }
+.all-relationships td { padding: 14px 10px; }
+.all-relationships td:last-child { min-width: 230px; }
+.nojs { padding: 30px; font-size: 18px; }
+.print-title { display: none; }
+@media(max-width:1050px) {
+  .wrap { width: calc(100% - 48px); }
+  .nav { gap: 18px; }
+  .stat { padding: 6px 21px; }
+  .stat strong { font-size: 36px; }
+  .filters { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width:850px) {
+  .bar { gap: 15px; flex-wrap: wrap; padding: 14px 0 12px; }
+  .nav { order: 3; width: 100%; gap: 24px; padding-bottom: 1px; }
+  .stats { grid-template-columns: repeat(2,minmax(0,1fr)); padding: 10px 20px; }
+  .stat { padding: 22px 16px; }
+  .stat:nth-child(2) { border-right: 0; }
+  .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .summary-grid,.coverage-grid,.map-bottom { grid-template-columns: 1fr; }
+  .hero { padding-top: 52px; }
+  .panel { padding: 26px; }
+}
+@media(max-width:520px) {
+  html { scroll-padding-top: 120px; }
+  .wrap { width: calc(100% - 32px); }
+  .brand { font-size: 15px; gap: 8px; }
+  .print-button { font-size: 11px; padding: 8px 13px; }
+  .nav { justify-content: space-between; gap: 14px; }
+  .nav a { font-size: 11px; }
+  .demo { padding: 10px 20px; font-size: 10px; line-height: 1.6; }
+  .hero { padding: 44px 0 30px; }
+  .hero .eyebrow { font-size: 10px; margin-bottom: 18px; }
+  .hero p { margin-top: 20px; font-size: 17px; }
+  .meta { gap: 8px 12px; font-size: 10px; }
+  .stats { margin-bottom: 48px; padding: 8px; border-radius: 22px; }
+  .stat { padding: 19px 13px; }
+  .stat strong { font-size: 33px; }
+  .stat span { font-size: 11px; }
+  .stat .small { font-size: 10px; }
+  .section { margin-bottom: 48px; }
+  .section-heading { display: block; margin-bottom: 22px; }
+  .section-heading p { font-size: 14px; }
+  .panel { padding: 22px; border-radius: 22px; }
+  .summary-grid { gap: 16px; }
+  .filters,.finding-grid { grid-template-columns: 1fr; }
+  .finding-grid .full { grid-column: auto; }
+  .map-toolbar { align-items: flex-start; }
+  .map-toolbar label { width: 100%; }
+  .map-toolbar select { display: block; width: 100%; margin: 8px 0 0; }
+  .finding { padding: 18px; border-radius: 16px; }
+  .finding>summary { font-size: 13px; gap: 8px; }
+  .roadmap-grid { gap: 16px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}
+@media print {
+  @page { margin: 14mm; size: A4 landscape; }
+  body { font-size: 11px; background: #fff; color: #1d1d1f; }
+  .wrap { width: 100%; }
+  .topbar,.map-toolbar,.filters,.filter-count,.print-button,.legend,.map-bottom,.journey-select,#findings-empty { display: none !important; }
+  .demo { font-size: 10px; }
+  .hero { padding: 16px 0; }
+  .hero h1 { font-size: 34px; }
+  .hero p { font-size: 12px; margin: 15px auto; }
+  .stats { margin-bottom: 24px; padding: 12px; border: 1px solid var(--line); box-shadow: none; grid-template-columns: repeat(4,1fr); }
+  .stat { padding: 8px 12px; border-bottom: 0 !important; }
+  .stat:nth-child(2) { border-right: 1px solid var(--line); }
+  .stat strong { font-size: 24px; }
+  .section { margin-bottom: 26px; }
+  .panel { box-shadow: none; padding: 18px; border: 1px solid var(--line); border-radius: 16px; break-inside: avoid; }
+  .section-heading h2 { font-size: 23px; }
+  .section-heading p { font-size: 11px; }
+  .summary-grid { grid-template-columns: 1.4fr 1fr; }
+  .coverage-grid { grid-template-columns: 1.1fr 1fr; }
+  .map-scroll { overflow: visible; }
+  .map-grid { min-width: 0 !important; gap: 20px; padding: 0; grid-template-columns: repeat(var(--layers),minmax(0,1fr)); }
+  .module { min-height: 0; padding: 10px; font-size: 10px; opacity: 1 !important; break-inside: avoid; margin-bottom: 14px; border-radius: 10px; }
+  .module strong { font-size: 11px; }
+  .module .purpose { font-size: 9px; }
+  .module .module-type { font-size: 8px; }
+  .module .badge { font-size: 8px; }
+  .layer h3 { font-size: 8px; letter-spacing: .3px; }
+  .finding { break-inside: avoid; display: block !important; }
+  .finding>summary { font-size: 12px; }
+  .finding-grid { grid-template-columns: 1fr 1fr; }
+  .finding-grid p { font-size: 11px; }
+  details>div { display: block !important; }
+  .finding-cards { gap: 12px; }
+  .table-scroll { overflow: visible; }
+  table { font-size: 10px; }
+  th,td { padding: 9px 6px; }
+  [data-filter-finding].hide { display: revert !important; }
+  .footer { padding: 15px 0; }
+  .print-title { display: block; }
+  .roadmap-grid { grid-template-columns: repeat(3,1fr); }
+  .phase::before { margin-bottom: 12px; }
+  .phase h3 { font-size: 18px; }
+  a { color: inherit; }
+  .map-svg { display: none; }
+  .all-relationships td:last-child { min-width: 0; }
+}
+</style>
+</head>
+<body>
+<a href="#overview" class="small" style="position:absolute;left:-10000px" onfocus="this.style.left='15px'" onblur="this.style.left='-10000px'">Skip to report</a>
+<div class="topbar"><div class="wrap bar"><div class="brand"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 6h8M6 8v8m2 2h8m2-10v8" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="3" width="6" height="6" rx="2" fill="currentColor"/><rect x="15" y="3" width="6" height="6" rx="2" fill="currentColor" opacity=".55"/><rect x="3" y="15" width="6" height="6" rx="2" fill="currentColor" opacity=".55"/><rect x="15" y="15" width="6" height="6" rx="2" fill="currentColor"/></svg>Code Audit Map</div><nav class="nav" aria-label="Report sections"><a href="#overview">Overview</a><a href="#architecture">How it works</a><a href="#findings">Findings</a><a href="#roadmap">Roadmap</a><a href="#coverage">Coverage</a></nav><button class="print-button" id="print">Print / save PDF</button></div></div>
+<div id="demo" class="demo hide"><strong>FICTIONAL DEMONSTRATION</strong> · This preview shows the report format. It is not an audit of your repository.</div>
+<main class="wrap">
+<header class="hero" id="overview"><div class="eyebrow">Independent architecture &amp; code quality audit</div><h1 id="project"></h1><p id="verdict"></p><div class="meta" id="meta"></div></header>
+<div class="stats" id="stats"></div>
+<section class="section" aria-labelledby="summary-title"><div class="section-heading"><div><div class="section-number">01 / THE DECISION</div><h2 id="summary-title">What needs your attention</h2><p>A business view of the risks, the evidence, and the next useful investments.</p></div></div><div class="summary-grid"><div class="panel"><h3>Executive summary</h3><ul id="executive"></ul></div><div class="panel"><h3>Start here</h3><div id="priorities" class="priorities"></div><div class="callout">P0 emergency · P1 high · P2 medium · P3 low.<br>“Potential risk” means an important condition still needs validation.</div></div></div></section>
+<section id="architecture" class="section" aria-labelledby="architecture-title"><div class="section-heading"><div><div class="section-number">02 / THE SYSTEM</div><h2 id="architecture-title">How the product works</h2><p>Select a capability to see its role, what it connects to, and its findings. Arrows show the direction of each relationship.</p></div></div><div class="architecture-text" id="architecture-text"></div><div class="panel"><div class="map-toolbar"><label for="journey">Follow a journey <select id="journey"><option value="">All capabilities</option></select></label><button class="plain-button" id="reset-map">Reset map</button></div><div class="map-scroll"><div class="map-canvas" id="map-canvas"><svg class="map-svg" id="map-svg" aria-hidden="true"></svg><div class="map-grid" id="map-grid"></div></div></div><div class="legend"><span><i></i>Confirmed relationship</span><span><i class="dashed"></i>Inferred relationship</span><span>Issue counts show confirmed findings and potential risks separately</span></div><div class="map-bottom" style="margin-top:20px"><div id="journey-story"></div><div id="module-detail" aria-live="polite"></div></div><details id="relationships-detail"><summary>All relationships and supporting evidence</summary><div class="table-scroll"><table class="all-relationships"><thead><tr><th scope="col">From → To</th><th scope="col">What happens</th><th scope="col">Evidence</th></tr></thead><tbody id="relationships-body"></tbody></table></div></details></div></section>
+<section id="findings" class="section" aria-labelledby="findings-title"><div class="section-heading"><div><div class="section-number">03 / THE RISKS</div><h2 id="findings-title">Prioritized findings</h2><p>Open a finding for the failure mechanism, business consequence, improvement, effort, and validation step.</p></div></div><div class="panel"><div class="filters"><label for="search">Search findings<input id="search" type="search" placeholder="Title, business impact, file…"></label><label for="severity">Severity<select id="severity"><option value="">All priorities</option><option>P0</option><option>P1</option><option>P2</option><option>P3</option></select></label><label for="certainty">Certainty<select id="certainty"><option value="">All evidence levels</option><option value="confirmed">Confirmed problems</option><option value="potential">Potential risks</option></select></label><label for="module-filter">Capability<select id="module-filter"><option value="">All capabilities</option></select></label></div><p class="filter-count" id="filter-count" aria-live="polite"></p><div class="table-scroll"><table><thead><tr><th scope="col">Priority</th><th scope="col">Finding &amp; category</th><th scope="col">Business impact</th><th scope="col">Effort</th></tr></thead><tbody id="finding-rows"></tbody></table></div><div id="findings-empty" class="empty hide">No findings match these filters.</div></div><div class="finding-cards" id="finding-cards"></div></section>
+<section id="roadmap" class="section" aria-labelledby="roadmap-title"><div class="section-heading"><div><div class="section-number">04 / THE INVESTMENT</div><h2 id="roadmap-title">A phased path forward</h2><p>Reduce the most consequential risks first. Effort ranges are engineering estimates; timing depends on capacity and release constraints.</p></div></div><div class="roadmap-grid" id="roadmap-phases"></div></section>
+<section id="coverage" class="section" aria-labelledby="coverage-title"><div class="section-heading"><div><div class="section-number">05 / THE CONFIDENCE</div><h2 id="coverage-title">What was reviewed, and what remains unknown</h2><p>Coverage describes this review’s scope. It does not establish that the software is free of defects.</p></div></div><div class="coverage-grid"><div class="panel"><h3>Review coverage</h3><div class="coverage-counts" id="coverage-counts"></div><div id="dimensions"></div><details><summary>File-by-file coverage ledger</summary><div class="table-scroll"><table><thead><tr><th scope="col">File</th><th scope="col">Review</th><th scope="col">Scope / reason</th></tr></thead><tbody id="coverage-files"></tbody></table></div></details><details><summary>Excluded scopes</summary><div id="exclusions"></div></details></div><div class="panel"><h3>Validation &amp; limitations</h3><div id="checks" class="check-list"></div><details open><summary>Limits of this assessment</summary><div id="limitations"></div></details><details open><summary>Assumptions</summary><div id="assumptions"></div></details><details open><summary>Questions for the owner</summary><div id="questions"></div></details><details><summary>Working controls and justified design choices</summary><div id="strengths"></div></details></div></div></section>
+</main><footer class="footer"><div class="wrap" id="footer"></div></footer>
+<noscript><div class="nojs">Enable JavaScript to view this self-contained audit report. No network connection is required.</div></noscript>
+<script id="audit-data" type="application/json">__AUDIT_DATA__</script>
+<script>
+"use strict";
+const A=JSON.parse(document.getElementById('audit-data').textContent);
+const $=id=>document.getElementById(id);
+const E=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const M=new Map(A.modules.map(m=>[m.id,m]));
+const F=new Map(A.findings.map(f=>[f.id,f]));
+const R=new Map(A.relationships.map(r=>[r.id,r]));
+const theme=getComputedStyle(document.documentElement);
+const edgeColor=theme.getPropertyValue('--edge').trim();
+const edgeActiveColor=theme.getPropertyValue('--edge-active').trim();
+const severityRank={P0:0,P1:1,P2:2,P3:3};
+const findings=A.findings.map((f,i)=>({...f,order:i})).sort((a,b)=>severityRank[a.severity]-severityRank[b.severity]||a.order-b.order);
+const badge=(label,cls='')=>`<span class="badge ${E(cls)}">${E(label)}</span>`;
+const confidence=c=>c==='confirmed'?'Confirmed problem':'Potential risk';
+const list=(values,empty='None recorded.')=>values.length?`<ul>${values.map(v=>`<li>${E(v)}</li>`).join('')}</ul>`:`<p class="muted small">${E(empty)}</p>`;
+function sourceURL(e){
+  if(!A.meta.repository_url||! /^[0-9a-f]{40}$/i.test(A.meta.revision))return null;
+  const u=new URL(A.meta.repository_url),path=e.path.split('/').map(encodeURIComponent).join('/');
+  const base=u.href.replace(/\/$/,'').replace(/\.git$/,'');
+  if(u.hostname==='github.com')return `${base}/blob/${A.meta.revision}/${path}#L${e.line}${e.end_line?'-L'+e.end_line:''}`;
+  if(u.hostname==='gitlab.com')return `${base}/-/blob/${A.meta.revision}/${path}#L${e.line}${e.end_line?'-'+e.end_line:''}`;
+  return null;
+}
+function evidence(values){return `<div class="evidence-list">${values.length?values.map(e=>{const label=`${e.path}:${e.line}${e.end_line&&e.end_line!==e.line?'–'+e.end_line:''}`,url=sourceURL(e);return `<div class="evidence">${url?`<a href="${E(url)}" target="_blank" rel="noopener noreferrer"><code>${E(label)}</code></a>`:`<code>${E(label)}</code>`}<p>${E(e.note)}</p></div>`;}).join(''):'<p class="small muted">No direct source evidence recorded; see the stated review limits.</p>'}</div>`;}
+function findingLink(id,label){return `<a href="#finding-${E(id)}" data-finding="${E(id)}">${E(label||id)}</a>`;}
+function moduleButton(id){return `<button type="button" class="step-button" data-select-module="${E(id)}">${E(M.get(id).label)}</button>`;}
+
+document.title=`${A.meta.project} · Code Audit Map`;
+$('project').textContent=A.meta.project;
+$('verdict').textContent=A.summary.verdict;
+$('demo').classList.toggle('hide',!A.meta.is_demo);
+$('meta').innerHTML=[['Reviewed',A.meta.audited_at],['Revision',A.meta.revision.length===40?A.meta.revision.slice(0,12):A.meta.revision],['Scope',A.meta.scope],['Coverage',A.meta.status==='complete'?'Complete declared scope':'Partial review'],['Worktree',A.meta.worktree]].map(([k,v])=>`<span><strong>${E(k)}</strong> ${E(v)}</span>`).join('');
+const confirmed=findings.filter(f=>f.confidence==='confirmed'),potential=findings.filter(f=>f.confidence==='potential');
+const counts=Object.fromEntries(['reviewed','sampled','unreviewed','excluded'].map(s=>[s,A.coverage.files.filter(f=>f.status===s).length]));
+$('stats').innerHTML=[[''+A.modules.length,'Capabilities mapped',`${A.relationships.length} directed relationships`],[''+confirmed.filter(f=>['P0','P1'].includes(f.severity)).length,'Confirmed P0 / P1 problems',`${confirmed.length} confirmed findings in total`],[''+potential.length,'Potential risks to validate','Severity is conditional on the stated risk'],[`${counts.reviewed} / ${A.coverage.inventory_count}`,'Inventoried files fully reviewed',`${counts.sampled} sampled · ${counts.unreviewed} unreviewed · ${counts.excluded} excluded`]].map(([n,l,s])=>`<div class="stat"><strong>${E(n)}</strong><span>${E(l)}</span><span class="small">${E(s)}</span></div>`).join('');
+$('executive').innerHTML=A.summary.executive.map(t=>`<li>${E(t)}</li>`).join('');
+$('priorities').innerHTML=A.summary.priorities.length?A.summary.priorities.map(id=>{const f=F.get(id);return `<div class="priority">${badge(f.severity,f.severity)}<div>${findingLink(id,f.title)}<div class="small muted">${E(confidence(f.confidence))} · ${E(f.effort.range)}</div></div></div>`;}).join(''):'<p class="small muted">No priority actions recorded. Consult the coverage limits.</p>';
+$('architecture-text').innerHTML=A.summary.architecture.map(t=>`<p>${E(t)}</p>`).join('');
+$('journey').insertAdjacentHTML('beforeend',A.journeys.map(j=>`<option value="${E(j.id)}">${E(j.title)}</option>`).join(''));
+$('module-filter').insertAdjacentHTML('beforeend',A.modules.map(m=>`<option value="${E(m.id)}">${E(m.label)}</option>`).join(''));
+const grid=$('map-grid');
+grid.style.setProperty('--layers',A.layers.length);
+grid.style.setProperty('--map-width',`${Math.max(650,A.layers.length*259-34)}px`);
+grid.innerHTML=A.layers.map(l=>`<div class="layer"><h3>${E(l.label)}</h3>${A.modules.filter(m=>m.layer===l.id).map(m=>{
+  const issues=findings.filter(f=>f.modules.includes(m.id)),known=issues.filter(f=>f.confidence==='confirmed'),risks=issues.filter(f=>f.confidence==='potential');
+  const flags=[m.review_status!=='reviewed'?badge(m.review_status==='sampled'?'Partially reviewed':'Unreviewed','unknown'):'',known.length?badge(`${known.length} confirmed`,known[0].severity):'',risks.length?badge(`${risks.length} potential`,'potential'):''];
+  if(m.review_status==='reviewed'&&!issues.length)flags.push(badge('No reported finding'));
+  return `<button class="module" id="module-${E(m.id)}" data-select-module="${E(m.id)}" aria-pressed="false"><span class="module-type">${E(m.type)}</span><strong>${E(m.label)}</strong><span class="purpose">${E(m.purpose)}</span><span class="module-badges">${flags.join('')}</span></button>`;
+}).join('')}</div>`).join('');
+let selectedModule=null,selectedJourney=null;
+function updateMap(){
+  const journey=A.journeys.find(j=>j.id===selectedJourney);
+  let active=null;
+  if(journey)active=new Set(journey.steps.map(s=>s.module));
+  else if(selectedModule){active=new Set([selectedModule]);A.relationships.filter(r=>r.source===selectedModule||r.target===selectedModule).forEach(r=>{active.add(r.source);active.add(r.target);});}
+  A.modules.forEach(m=>{const b=$('module-'+m.id);b.classList.toggle('selected',m.id===selectedModule);b.classList.toggle('dimmed',!!active&&!active.has(m.id));b.setAttribute('aria-pressed',String(m.id===selectedModule));});
+  $('journey-story').innerHTML=journey?`<h3>${E(journey.title)}</h3><p class="small muted">${E(journey.description)}</p><ol class="journey-steps">${journey.steps.map(s=>`<li>${moduleButton(s.module)}<div class="small muted">${E(s.text)}</div></li>`).join('')}</ol>`:`<h3>Explore the system</h3><p class="small muted">Choose a journey above to follow a real product flow, or select a capability to inspect its direct connections. The map groups code by business purpose.</p><div class="callout">Solid arrows have source evidence. Dashed arrows are inferred. A connection describes a call, data exchange, dependency, event, or deployment action; it does not by itself prove a problem.</div>`;
+  if(selectedModule){
+    const m=M.get(selectedModule),edges=A.relationships.filter(r=>r.source===m.id||r.target===m.id),issues=findings.filter(f=>f.modules.includes(m.id));
+    $('module-detail').innerHTML=`<h3>${E(m.label)}</h3><p class="small">${E(m.business_role)}</p><div class="small muted" style="margin-top:8px">Review: ${E(m.review_status)} · ${E(m.type)}</div><div class="module-paths">${m.paths.map(E).join('<br>')}</div><ul class="relationship-list">${edges.map(r=>`<li>${moduleButton(r.source)} → ${moduleButton(r.target)}<div class="muted small">${E(r.label)} · ${E(r.kind)} ${r.confidence==='inferred'?badge('Inferred','potential'):''}</div></li>`).join('')||'<li>No direct relationships recorded.</li>'}</ul>${issues.length?`<p class="small">Findings: ${issues.map(f=>findingLink(f.id,`${f.id} · ${f.title}`)).join(' · ')}</p>`:'<p class="small muted">No findings recorded for this capability; read its review status and coverage limits.</p>'}<details><summary>Source evidence for this capability</summary>${evidence(m.evidence)}</details>`;
+  }else $('module-detail').innerHTML='<h3>Capability detail</h3><p class="small muted">Select a box in the map to see its business role, source locations, connected capabilities, and findings.</p>';
+  requestAnimationFrame(drawEdges);
+}
+function drawEdges(){
+  const canvas=$('map-canvas'),svg=$('map-svg'),box=canvas.getBoundingClientRect(),w=canvas.scrollWidth,h=canvas.scrollHeight;
+  svg.setAttribute('width',w);svg.setAttribute('height',h);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  const journey=A.journeys.find(j=>j.id===selectedJourney),journeyEdges=new Set(journey?journey.relationship_ids:[]);
+  svg.innerHTML=`<defs><marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${E(edgeColor)}"/></marker><marker id="arrow-active" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${E(edgeActiveColor)}"/></marker></defs>`;
+  A.relationships.forEach((r,i)=>{
+    const a=$('module-'+r.source).getBoundingClientRect(),b=$('module-'+r.target).getBoundingClientRect();
+    const sameLayer=M.get(r.source).layer===M.get(r.target).layer;
+    let d;
+    if(r.source===r.target){const x=a.right-box.left,y=a.top-box.top+40;d=`M ${x} ${y} C ${x+30} ${y-35},${x+30} ${y+50},${x} ${y+45}`;}
+    else if(sameLayer){const x=a.right-box.left,y=a.top-box.top+a.height/2,tx=b.right-box.left,ty=b.top-box.top+b.height/2,offset=20+(i%3)*6;d=`M ${x} ${y} C ${x+offset} ${y},${tx+offset} ${ty},${tx} ${ty}`;}
+    else {const forward=b.left>a.left,x=(forward?a.right:a.left)-box.left,y=a.top-box.top+a.height/2,tx=(forward?b.left:b.right)-box.left,ty=b.top-box.top+b.height/2,dx=Math.max(26,Math.abs(tx-x)*.45)*(forward?1:-1);d=`M ${x} ${y} C ${x+dx} ${y},${tx-dx} ${ty},${tx} ${ty}`;}
+    const on=journey?journeyEdges.has(r.id):!!selectedModule&&(r.source===selectedModule||r.target===selectedModule),dim=(journey||selectedModule)&&!on;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    Object.entries({d,fill:'none',stroke:on?edgeActiveColor:edgeColor,'stroke-width':on?'2.4':'1.4',opacity:dim?'.14':'.8','marker-end':`url(#arrow-${on?'active':'default'})`,'data-edge':r.id,'data-active':String(on)}).forEach(([k,v])=>path.setAttribute(k,v));
+    if(r.confidence==='inferred')path.setAttribute('stroke-dasharray','5 5');
+    svg.appendChild(path);
+  });
+}
+$('relationships-body').innerHTML=A.relationships.map(r=>`<tr><td>${moduleButton(r.source)} → ${moduleButton(r.target)}</td><td>${E(r.label)}<span class="muted">${E(r.kind)} · ${E(r.confidence)}</span></td><td>${evidence(r.evidence)}</td></tr>`).join('');
+$('journey').addEventListener('change',e=>{selectedJourney=e.target.value||null;selectedModule=null;updateMap();});
+$('reset-map').addEventListener('click',()=>{selectedModule=null;selectedJourney=null;$('journey').value='';updateMap();});
+document.addEventListener('click',e=>{
+  const module=e.target.closest('[data-select-module]');
+  if(module){selectedModule=module.dataset.selectModule;updateMap();}
+  const link=e.target.closest('[data-finding]');
+  if(link){const id=link.dataset.finding;clearFilters();const card=$('finding-'+id);card.open=true;requestAnimationFrame(()=>card.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}));}
+});
+const field=(title,text,full=false)=>`<div${full?' class="full"':''}><h4>${E(title)}</h4><p>${E(text)}</p></div>`;
+$('finding-rows').innerHTML=findings.map(f=>`<tr data-filter-finding="${E(f.id)}"><td>${badge(f.severity,f.severity)}<span class="muted">${E(confidence(f.confidence))}</span></td><td>${findingLink(f.id,`${f.id} · ${f.title}`)}<span class="muted">${E(f.category)} · ${f.modules.map(id=>E(M.get(id).label)).join(', ')}</span></td><td>${E(f.business_impact)}</td><td class="effort">${E(f.effort.range)}</td></tr>`).join('');
+$('finding-cards').innerHTML=findings.map(f=>`<details class="finding" id="finding-${E(f.id)}" data-filter-finding="${E(f.id)}"><summary>${badge(f.severity,f.severity)}<span>${E(f.id)} · ${E(f.title)}</span>${badge(confidence(f.confidence),f.confidence==='potential'?'potential':'')}<span class="small muted">${E(f.category)}</span></summary><div class="finding-body"><p class="finding-description">${E(f.description)}</p><div class="finding-grid">${field('Why this priority',f.severity_reason)}${field('Business impact',f.business_impact)}${field('Technical impact',f.technical_impact)}${field('Recommended improvement',f.recommendation)}${field('Estimated effort',f.effort.range+' · '+f.effort.assumptions)}${field(f.confidence==='potential'?'Validate this risk':'How to verify the improvement',f.verification)}<div class="full"><h4>Evidence</h4>${evidence(f.evidence)}</div></div></div></details>`).join('');
+function filterFindings(){
+  const q=$('search').value.trim().toLowerCase(),s=$('severity').value,c=$('certainty').value,m=$('module-filter').value;
+  const visible=new Set(findings.filter(f=>(!s||f.severity===s)&&(!c||f.confidence===c)&&(!m||f.modules.includes(m))&&(!q||JSON.stringify(f).toLowerCase().includes(q))).map(f=>f.id));
+  document.querySelectorAll('[data-filter-finding]').forEach(el=>el.classList.toggle('hide',!visible.has(el.dataset.filterFinding)));
+  $('filter-count').textContent=`Showing ${visible.size} of ${findings.length} findings · ${confirmed.length} confirmed problems · ${potential.length} potential risks`;
+  $('findings-empty').classList.toggle('hide',visible.size>0);
+}
+function clearFilters(){['search','severity','certainty','module-filter'].forEach(id=>$(id).value='');filterFindings();}
+['search','severity','certainty','module-filter'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',filterFindings));
+$('roadmap-phases').innerHTML=A.roadmap.length?A.roadmap.map((p,i)=>`<article class="panel phase"><div class="eyebrow">Phase ${i+1} · ${E(p.timing)}</div><h3>${E(p.title)}</h3><p>${E(p.goal)}</p><div class="phase-links">${p.finding_ids.map(id=>findingLink(id)).join('')}</div><p class="small muted">${p.dependencies.length?'Depends on: '+p.dependencies.map(id=>E(A.roadmap.find(p=>p.id===id).title)).join(', '):'No earlier phase required.'}</p><div class="small" style="font-weight:650">Success looks like</div>${list(p.success_criteria)}</article>`).join(''):'<div class="panel"><p class="muted small">No remediation phases recorded. See the findings and review limits.</p></div>';
+$('coverage-counts').innerHTML=Object.entries(counts).map(([k,v])=>`<span><strong>${v}</strong> ${E(k)}</span>`).join('');
+$('dimensions').innerHTML=A.coverage.dimensions.map(d=>`<div class="dimension"><div><strong>${E(d.name)}</strong>${badge(d.status,d.status==='reviewed'?'':'unknown')}</div><p>${E(d.summary)}</p></div>`).join('');
+$('coverage-files').innerHTML=A.coverage.files.map(f=>`<tr><td><code>${E(f.path)}</code></td><td>${badge(f.status,f.status==='reviewed'?'':'unknown')}</td><td>${E(f.reason)}</td></tr>`).join('');
+$('exclusions').innerHTML=A.coverage.exclusions.length?A.coverage.exclusions.map(x=>`<div class="evidence"><code>${E(x.path)}</code><p>${E(x.reason)}</p></div>`).join(''):'<p class="small muted">No excluded scopes recorded.</p>';
+$('checks').innerHTML=A.coverage.checks.length?A.coverage.checks.map(c=>`<div class="check"><strong class="small">${E(c.name)}</strong> ${badge(c.status,c.status==='failed'?'P1':c.status==='not-run'?'unknown':'')}<p>${E(c.detail)}</p></div>`).join(''):'<p class="muted small">No execution checks recorded.</p>';
+['limitations','assumptions','questions'].forEach(id=>$(id).innerHTML=list(id==='limitations'?A.coverage.limitations:A.summary[id]));
+$('strengths').innerHTML=A.summary.strengths.length?A.summary.strengths.map(s=>`<div style="margin-bottom:15px"><p class="small">${E(s.description)}</p>${evidence(s.evidence)}</div>`).join(''):'<p class="muted small">No separately evidenced controls recorded.</p>';
+$('footer').textContent=`${A.meta.is_demo?'Fictional preview · ':''}Read-only assessment · ${A.meta.project} · ${A.meta.audited_at} · Evidence refers to the recorded revision and worktree. All report data is embedded; no network connection is required.`;
+let printState=[];
+window.addEventListener('beforeprint',()=>{printState=[...document.querySelectorAll('details')].map(el=>[el,el.open]);printState.forEach(([el])=>el.open=true);});
+window.addEventListener('afterprint',()=>{printState.forEach(([el,open])=>el.open=open);requestAnimationFrame(drawEdges);});
+$('print').addEventListener('click',()=>window.print());
+window.addEventListener('resize',()=>requestAnimationFrame(drawEdges));
+if(window.ResizeObserver)new ResizeObserver(()=>requestAnimationFrame(drawEdges)).observe(grid);
+filterFindings();updateMap();
+if(location.hash.startsWith('#finding-')){const card=$(location.hash.slice(1));if(card&&card.classList.contains('finding'))card.open=true;}
+</script>
+</body>
+</html>
