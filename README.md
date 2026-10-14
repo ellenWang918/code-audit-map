@@ -30,6 +30,7 @@ The skill guides an AI agent through a Principal Software Engineer's review. The
 - **A practical remediation roadmap.** Sequence containment, validation, stabilization, and targeted improvements around value and dependencies.
 - **One report that stays current.** Repeat audits update the same HTML and JSON paths; continuing findings retain their IDs.
 - **An Apple-inspired presentation.** System typography, generous spacing, rounded cards, translucent navigation, blue accents, and printable detail.
+- **Focused report views.** Switch between Overview, System map, Findings, Roadmap, and Coverage. Inspect one finding alongside the list, or focus the map on one business journey.
 - **An offline report.** The generated HTML embeds its data, styles, scripts, and SVG map. No CDN, hosted dashboard, or network connection is needed to view it.
 
 ## Workflow
@@ -148,7 +149,7 @@ To regenerate it from the repository root:
 python scripts/render_audit.py --input examples/audit-data.json --output examples/code-audit.html
 ```
 
-Run the same command again to refresh that same file. The example's product, evidence, findings, and estimates are all fictional.
+Run the same command again to refresh that same file. The expanded example includes **12 capabilities, 20 relationships, 8 findings, and 4 journeys**, with sampled and unreviewed areas. Its product, evidence, findings, and estimates are all fictional.
 
 To validate report data without writing HTML:
 
